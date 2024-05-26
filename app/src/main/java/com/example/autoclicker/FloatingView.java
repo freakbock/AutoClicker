@@ -43,7 +43,6 @@ public class FloatingView extends Service implements View.OnClickListener {
         mWindowManager.addView(myFloatingView, params);
         isViewAttached = true;  // Устанавливаем флаг в true после добавления представления
 
-        // добавление обработчика касаний для перемещения плавающего виджета
         myFloatingView.findViewById(R.id.thisIsAnID).setOnTouchListener(new View.OnTouchListener() {
             private int initialX;
             private int initialY;
@@ -114,8 +113,9 @@ public class FloatingView extends Service implements View.OnClickListener {
                 }
             }
             Intent appMain = new Intent(getApplicationContext(), MainActivity.class);
-            appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  // Добавляем флаг для новой задачи
+            appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getApplication().startActivity(appMain);
+            stopSelf();
         }
 
         getApplication().startService(intent);

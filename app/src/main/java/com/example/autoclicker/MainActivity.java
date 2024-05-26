@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
@@ -18,10 +19,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ActivityResultLauncher<Intent> accessibilitySettingsLauncher;
     private ActivityResultLauncher<Intent> overlayPermissionLauncher;
 
+    public static AppDatabase database;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        database = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database_autoclicker").build();
 
         // Register activity result launchers
         accessibilitySettingsLauncher = registerForActivityResult(
@@ -72,15 +77,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if (Settings.canDrawOverlays(this)) {
-            if (isAccessibilityServiceEnabled()) {
-                startFloatingService();
-                finish();
+        if(v.getId() == R.id.startFloat){
+            if (Settings.canDrawOverlays(this)) {
+                if (isAccessibilityServiceEnabled()) {
+                    startFloatingService();
+                    finish();
+                } else {
+                    checkAccessibilityPermission();
+                }
             } else {
-                checkAccessibilityPermission();
+                askOverlayPermission();
             }
-        } else {
-            askOverlayPermission();
+        }
+        else if(v.getId() == R.id.createPresset){
+
+        }
+        else if(v.getId() == R.id.loadPresset){
+
         }
     }
 
