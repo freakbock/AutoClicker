@@ -1,20 +1,33 @@
-package com.example.autoclicker;
+package com.example.autoclicker.AccessibilityServices;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
 import android.content.Intent;
 import android.graphics.Path;
+import android.graphics.Rect;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
+
+import com.example.autoclicker.Entity.PresetAction;
+import com.example.autoclicker.MainActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AutoClickService extends AccessibilityService {
 
     private Handler mHandler;
     private int mX;
     private int mY;
+    private IntervalRunnable mRunnable;
 
     @Override
     public void onCreate() {
@@ -27,6 +40,11 @@ public class AutoClickService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         Log.d("AutoClickService", "Service connected");
+        AccessibilityServiceInfo info = new AccessibilityServiceInfo();
+        info.eventTypes = AccessibilityEvent.TYPE_TOUCH_INTERACTION_START | AccessibilityEvent.TYPE_TOUCH_INTERACTION_END;
+        info.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+        info.flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS;
+        setServiceInfo(info);
     }
 
     @Override
@@ -51,13 +69,13 @@ public class AutoClickService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+
     }
 
     @Override
     public void onInterrupt() {
     }
 
-    private IntervalRunnable mRunnable;
 
     private class IntervalRunnable implements Runnable {
         @Override

@@ -5,11 +5,11 @@ import androidx.room.Relation;
 
 import java.util.List;
 
-public class PressetWithActions {
+public class PresetWithActions {
     @Embedded public Presset preset;
     @Relation(
             parentColumn = "id",
             entityColumn = "presetId"
     )
-    public List<PressetAction> actions;
+    public List<PresetAction> actions;
 }

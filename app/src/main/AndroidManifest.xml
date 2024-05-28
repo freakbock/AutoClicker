@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -26,12 +27,25 @@
         </activity>
 
         <service
-            android:name=".FloatingView"
+            android:name=".FloatingView.FloatingView"
             android:enabled="true"
             android:exported="false" />
 
         <service
-            android:name=".AutoClickService"
+            android:name=".FloatingView.RecordingFloatingView"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".FloatingView.PlaybackFloatingView"
+            android:exported="false"
+            android:enabled="true"
+            >
+        </service>
+
+
+        <service
+            android:name=".AccessibilityServices.AutoClickService"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -42,6 +56,21 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/global_action_bar_service" />
         </service>
+
+        <service
+            android:name=".AccessibilityServices.PlaybackService"
+            android:enabled="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/global_action_bar_service" />
+        </service>
+
+
     </application>
 
 </manifest>
