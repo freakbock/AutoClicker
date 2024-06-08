@@ -41,6 +41,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/border_radius"
+        android:onClick="LoadRemotePressets"
         android:text="Скачать прессет"
         android:textColor="@color/white"
         app:layout_constraintLeft_toLeftOf="parent"

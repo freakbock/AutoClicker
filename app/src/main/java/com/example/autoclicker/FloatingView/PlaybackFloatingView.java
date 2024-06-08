@@ -4,11 +4,15 @@
     import android.content.Intent;
     import android.graphics.PixelFormat;
     import android.os.IBinder;
+    import android.util.DisplayMetrics;
     import android.util.Log;
+    import android.view.Gravity;
     import android.view.LayoutInflater;
     import android.view.MotionEvent;
     import android.view.View;
     import android.view.WindowManager;
+    import android.widget.FrameLayout;
+    import android.widget.ImageView;
 
     import com.example.autoclicker.AccessibilityServices.PlaybackService;
     import com.example.autoclicker.MainActivity;
@@ -21,6 +25,9 @@
         private boolean isViewAttached = false;
 
         private int pressetId;
+
+        boolean isRight = false;
+        boolean isBottom = false;
 
         @Override
         public IBinder onBind(Intent intent) {
@@ -70,10 +77,10 @@
                         case MotionEvent.ACTION_UP:
                             return true;
                         case MotionEvent.ACTION_MOVE:
-                            // этот код позволяет перемещать виджет по экрану с помощью пальцев
                             params.x = initialX + (int) (event.getRawX() - initialTouchX);
                             params.y = initialY + (int) (event.getRawY() - initialTouchY);
                             mWindowManager.updateViewLayout(mFloatingView, params);
+
                             return true;
                     }
                     return false;
@@ -87,6 +94,10 @@
             mFloatingView.findViewById(R.id.stopPlayback).setOnClickListener(this);
         }
 
+        public int dpToPx(int dp) {
+            float density = getResources().getDisplayMetrics().density;
+            return Math.round(dp * density);
+        }
 
         @Override
         public int onStartCommand(Intent intent, int flags, int startId) {

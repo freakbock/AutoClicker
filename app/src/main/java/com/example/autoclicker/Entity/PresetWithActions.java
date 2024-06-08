@@ -3,6 +3,7 @@ package com.example.autoclicker.Entity;
 import androidx.room.Embedded;
 import androidx.room.Relation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PresetWithActions {
@@ -12,4 +13,8 @@ public class PresetWithActions {
             entityColumn = "presetId"
     )
     public List<PresetAction> actions;
+
+    public PresetWithActions(){
+        actions = new ArrayList<>();
+    }
 }

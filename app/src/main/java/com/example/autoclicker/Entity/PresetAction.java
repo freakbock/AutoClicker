@@ -19,5 +19,49 @@ public class PresetAction {
     public float endY;
     public long duration;
     public String type;
+
+
+    public PresetAction(int presetActionId, int presetId, float x, float y, float endX, float endY, long duration, String type) {
+        this.presetActionId = presetActionId;
+        this.presetId = presetId;
+        this.x = x;
+        this.y = y;
+        this.endX = endX;
+        this.endY = endY;
+        this.duration = duration;
+        this.type = type;
+    }
+
+    public int getActionId() {
+        return presetActionId;
+    }
+
+    public int getPresetId() {
+        return presetId;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public float getEndX() {
+        return endX;
+    }
+
+    public float getEndY() {
+        return endY;
+    }
+
+    public long getDuration() {
+        return duration;
+    }
+
+    public String getType() {
+        return type;
+    }
 }
 

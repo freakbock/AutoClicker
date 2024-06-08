@@ -23,12 +23,15 @@ import androidx.room.Room;
 
 import com.example.autoclicker.AccessibilityServices.AutoClickService;
 import com.example.autoclicker.AccessibilityServices.PlaybackService;
+import com.example.autoclicker.Data.DatabaseHelper;
 import com.example.autoclicker.Entity.PresetAction;
 import com.example.autoclicker.Entity.PresetWithActions;
 import com.example.autoclicker.Entity.Presset;
 import com.example.autoclicker.FloatingView.FloatingView;
 import com.example.autoclicker.FloatingView.PlaybackFloatingView;
 import com.example.autoclicker.FloatingView.RecordingFloatingView;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
@@ -50,12 +53,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         database = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database_autoclicker").fallbackToDestructiveMigration().allowMainThreadQueries().build();
 
         LoadPressets();
-//        for(Presset presset : database.actionDao().getAllPresets()){
-//            Log.d("MainActivity", presset.name + "\n");
-//            for(PresetAction presetAction : database.actionDao().getPresetWithActions(presset.id).actions){
-//                Log.d(presset.name, presetAction.x + " | " + presetAction.y   + " | " + presetAction.endX + " | " + presetAction.endY   + " | " + presetAction.type  + " | " + presetAction.duration);
-//            }
-//        }
 
         // Register activity result launchers
         accessibilitySettingsLauncher = registerForActivityResult(
@@ -83,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         findViewById(R.id.startFloat).setOnClickListener(this);
         findViewById(R.id.createPresset).setOnClickListener(this);
-        findViewById(R.id.loadPresset).setOnClickListener(this);
     }
 
         public int dpToPx(float dp) {
@@ -92,6 +88,144 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Конвертируем dp в пиксели
             return Math.round(dp * density);
         }
+
+    public void LoadRemotePressets(View view) {
+
+        setContentView(R.layout.load_presset_layout);
+        LinearLayout pressets_list_remote = findViewById(R.id.pressets_list);
+        pressets_list_remote.removeAllViews();
+
+        DatabaseHelper.getDataAsync(new DatabaseHelper.DatabaseOperationCallback<List<Presset>>() {
+            @Override
+            public void onSuccess(List<Presset> pressets) {
+                runOnUiThread(() ->{
+                    for(Presset presset : pressets){
+                        LinearLayout parent = new LinearLayout(MainActivity.this);
+                        LinearLayout.LayoutParams parentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        parentParams.setMargins(dpToPx(5), dpToPx(5), dpToPx(5), dpToPx(5));
+                        parent.setPadding(dpToPx(5),dpToPx(5),dpToPx(5),dpToPx(5));
+                        parent.setLayoutParams(parentParams);
+                        parent.setOrientation(LinearLayout.VERTICAL);
+
+                        TextView name = new TextView(MainActivity.this);
+                        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT
+                        );
+                        name.setTextSize(16f);
+                        name.setTextColor(getColor(R.color.black));
+                        name.setLayoutParams(nameParams);
+                        name.setText(presset.name);
+                        name.setOnClickListener(new DoubleClickListener() {
+                            @Override
+                            public void onDoubleClick(View v) {
+                                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                                builder.setTitle("Изменить текст");
+
+                                // Установите поле для ввода текста в диалоге
+                                final EditText input = new EditText(MainActivity.this);
+                                builder.setView(input);
+
+                                // Установите кнопки "ОК" и "Отмена"
+                                builder.setPositiveButton("ОК", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        String newText = input.getText().toString();
+                                        if(!newText.isEmpty()){
+                                            name.setText(newText);
+                                            database.actionDao().updateNamePressetById(presset.id, newText);
+                                        }
+                                    }
+                                });
+                                builder.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.cancel();
+                                    }
+                                });
+
+                                // Покажите диалог
+                                builder.show();
+                            }
+                        });
+
+                        LinearLayout childrenLayout = new LinearLayout(MainActivity.this);
+                        LinearLayout.LayoutParams childrenLayoutParams = new LinearLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                dpToPx(50)
+                        );
+                        childrenLayout.setLayoutParams(childrenLayoutParams);
+
+                        Button send = new Button(MainActivity.this);
+                        LinearLayout.LayoutParams sendParams = new LinearLayout.LayoutParams(
+                                dpToPx(100),
+                                dpToPx(50)
+                        );
+                        send.setLayoutParams(sendParams);
+                        send.setText("Загрузить");
+                        send.setTextSize(12f);
+                        send.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                try{
+
+                                    DatabaseHelper.loadPresetWithActionsAsync(presset.id, new DatabaseHelper.DatabaseOperationCallback<PresetWithActions>() {
+                                        @Override
+                                        public void onSuccess(PresetWithActions presetWithActions) {
+                                            runOnUiThread(() ->{
+                                                presetWithActions.preset.name += "_скачанное";
+                                                database.actionDao().insertPreset(presetWithActions.preset);
+                                                int pressetId = database.actionDao().getPresetIdFromName(presetWithActions.preset.name);
+                                                for(PresetAction presetAction : presetWithActions.actions){
+                                                    presetAction.presetId =pressetId;
+                                                    database.actionDao().insertAction(presetAction);
+                                                }
+                                                Toast.makeText(MainActivity.this, "Успешная загрузка прессета", Toast.LENGTH_SHORT).show();
+                                            });
+                                        }
+
+                                        @Override
+                                        public void onError(Exception e) {
+                                            runOnUiThread(() ->{
+                                                Toast.makeText(MainActivity.this, "Не удалось загрузить прессет с действиями", Toast.LENGTH_SHORT).show();
+                                            });
+                                        }
+                                    });
+                                }
+                                catch (Exception ex){
+                                    ex.printStackTrace();
+                                }
+                            }
+                        });
+
+                        childrenLayout.addView(send);
+
+                        parent.addView(name);
+                        parent.addView(childrenLayout);
+
+                        pressets_list_remote.addView(parent);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() ->{
+                    Toast.makeText(MainActivity.this, "Не удаётся подключиться к серверу", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
+
+    }
+
+    public void BackToMain(View view) {
+        setContentView(R.layout.activity_main);
+        pressets_list = findViewById(R.id.pressets_list);
+        LoadPressets();
+    }
 
 
     // Реализация слушателя двойного клика
@@ -202,7 +336,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             send.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    try{
+                        DatabaseHelper.addPresetAsync(presset.name, new DatabaseHelper.DatabaseOperationCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer id) {
+                                runOnUiThread(()->{
+                                    PresetWithActions presetWithActions = database.actionDao().getPresetWithActions(presset.id);
+                                    for(PresetAction action : presetWithActions.actions){
+                                        DatabaseHelper.addPresetActionAsync(id, action.x, action.y, action.endX, action.endY, action.duration, action.type, new DatabaseHelper.DatabaseOperationCallback<Void>() {
+                                            @Override
+                                            public void onSuccess(Void result) {
+                                                runOnUiThread(()->{
+                                                    Toast.makeText(MainActivity.this, "Прессет выложен в общую базу данных", Toast.LENGTH_SHORT).show();
+                                                        });
+                                            }
 
+                                            @Override
+                                            public void onError(Exception e) {
+                                                runOnUiThread(()->{
+                                                    Toast.makeText(MainActivity.this, "Не удалось выложить прессет в базу данных", Toast.LENGTH_SHORT).show();
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                runOnUiThread(()->{
+                                    Toast.makeText(MainActivity.this, "Не удалось выложить прессет в базу данных", Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        });
+                    }
+                    catch (Exception ex){
+                        ex.printStackTrace();
+                    }
                 }
             });
 

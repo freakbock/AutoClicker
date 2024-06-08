@@ -76,18 +76,29 @@ public class PlaybackService extends AccessibilityService {
             return;
         }
 
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        Path path = new Path();
+
         if ("click".equals(action.type)) {
-            Path path = new Path();
             path.moveTo(action.x, action.y);
             GestureDescription.StrokeDescription stroke =
                     new GestureDescription.StrokeDescription(
                             path,
                             0,
                             100);
-            GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
             gestureBuilder.addStroke(stroke);
             dispatchGesture(gestureBuilder.build(), null, null);
         }
+        else if("swipe".equals(action.type)){
+            path.moveTo(action.x, action.y);
+            path.lineTo(action.endX, action.endY);
+            GestureDescription.StrokeDescription stroke = new GestureDescription.StrokeDescription(
+                    path, 0, 500);
+
+            gestureBuilder.addStroke(stroke);
+        }
+
+        dispatchGesture(gestureBuilder.build(), null, null);
     }
 
     private void stopPlayback() {
